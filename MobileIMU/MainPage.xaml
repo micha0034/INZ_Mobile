@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MobileIMU.MainPage">
+
+    <StackLayout>
+        <Frame BackgroundColor="#2196F3" Padding="24" CornerRadius="0">
+            <Label Text="Just a Stick" HorizontalTextAlignment="Center" TextColor="White" FontSize="36"/>
+        </Frame>
+        <Label Text="This app will transform your phone into a mobile IMU." HorizontalTextAlignment="Center" FontSize="Title" Padding="30,10,30,10"/>
+        <Button Text="Start mobile IMU" Margin="20,0,20,0" Clicked="ButtonStart_Clicked" />
+        <Button Text="Stop mobile IMU" Margin="20,0,20,0" Clicked="ButtonStop_Clicked" />
+    </StackLayout>
+
+</ContentPage>
