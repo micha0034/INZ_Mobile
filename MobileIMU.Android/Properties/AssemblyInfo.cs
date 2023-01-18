@@ -27,8 +27,6 @@ using Android.App;
 
 // Add some common permissions, these can be removed if not needed
 [assembly: UsesPermission(Android.Manifest.Permission.Internet)]
-[assembly: UsesPermission(Android.Manifest.Permission.OverrideWifiConfig)]
-[assembly: UsesPermission(Android.Manifest.Permission.HighSamplingRateSensors)]
 [assembly: UsesPermission(Android.Manifest.Permission.ActivityRecognition)]
 [assembly: UsesPermission(Android.Manifest.Permission.ForegroundService)]
 

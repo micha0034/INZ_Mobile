@@ -135,7 +135,7 @@ namespace MobileIMU
                     {
                         var context = await server.GetContextAsync();
                         var response = context.Response;
-                        string responseString = ConcatReadings(gyro) + "/" + ConcatReadings(acc) + "/0";
+                        string responseString = ConcatReadings(gyro) + "/" + "0/0/0"/*ConcatReadings(acc)*/ + "/0";
 
                         switch (context.Request.Url.LocalPath.TrimStart('/')) {
                             case "d":
