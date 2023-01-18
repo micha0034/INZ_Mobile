@@ -5,6 +5,8 @@ using Android.OS;
 using Android.Util;
 using Android.Widget;
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -43,23 +45,23 @@ namespace MobileIMU
 
         private const string nonImportantChannelName = "constantNameJustAStickIMUDroid", channelId = "ServiceIMUDroid", channelName = "ServiceIMUSrv";
 
-        private readonly float[] gyro = new float[3] { 0, 0, 0 };
+        private readonly float[] gyro = new float[3] { 0, 0, 0 }, acc = new float[3] { 0, 0, 0 };
         private DateTime? lastReading = null;
 
         public ServiceIMU() : base()
         {
         }
 
-        void Gyroscope_ReadingChanged(object sender, GyroscopeChangedEventArgs e)
+        private void Gyroscope_ReadingChanged(object sender, GyroscopeChangedEventArgs e)
         {
             var data = e.Reading;
 
             var timeDiff = (DateTime.Now - lastReading).Value.TotalMilliseconds;
 
             // Process Angular Velocity X, Y, and Z reported in rad/s.
-            gyro[0] -= (float)((data.AngularVelocity.Z * 180 / Math.PI) * (timeDiff / 1000));
-            gyro[1] -= (float)((data.AngularVelocity.Y * 180 / Math.PI) * (timeDiff / 1000));
-            gyro[2] -= (float)((data.AngularVelocity.X * 180 / Math.PI) * (timeDiff / 1000));
+            gyro[0] -= (float)(data.AngularVelocity.Z * 180 / Math.PI * (timeDiff / 1000));
+            gyro[1] -= (float)(data.AngularVelocity.Y * 180 / Math.PI * (timeDiff / 1000));
+            gyro[2] -= (float)(data.AngularVelocity.X * 180 / Math.PI * (timeDiff / 1000));
 
             for (int i = 0; i < 3; i++)
             {
@@ -69,6 +71,20 @@ namespace MobileIMU
 
             lastReading = DateTime.Now;
         }
+
+        private void Acc_ReadingChanged(object sender, AccelerometerChangedEventArgs e)
+        {
+            var data = e.Reading;
+
+            // Accelerometer readings are reported back in G. A G is a unit of gravitation force equal to that exerted by the earth's gravitational field (9.81 m/s^2).
+            acc[0] += data.Acceleration.Z;
+            acc[1] += data.Acceleration.Y;
+            acc[2] += data.Acceleration.X;
+
+            lastReading = DateTime.Now;
+        }
+
+        private string ConcatReadings(IEnumerable<float> values) => values.Select(x => x.ToString(CultureInfo.InvariantCulture)).Aggregate((x, y) => x + "/" + y);
 
         public override StartCommandResult OnStartCommand(Intent intent, StartCommandFlags flags, int startId)
         {
@@ -119,7 +135,7 @@ namespace MobileIMU
                     {
                         var context = await server.GetContextAsync();
                         var response = context.Response;
-                        string responseString = gyro.Select(x => x.ToString()).Aggregate((x, y) => x + "/" + y) + "/0/0/0/0";
+                        string responseString = ConcatReadings(gyro) + "/" + ConcatReadings(acc) + "/0";
 
                         switch (context.Request.Url.LocalPath.TrimStart('/')) {
                             case "d":
@@ -166,8 +182,13 @@ namespace MobileIMU
                     Gyroscope.Stop();
                 Gyroscope.Start(SensorSpeed.Fastest);
 
+                if (Accelerometer.IsMonitoring)
+                    Accelerometer.Stop();
+                Accelerometer.Start(SensorSpeed.Fastest);
+
                 lastReading = DateTime.Now;
                 Gyroscope.ReadingChanged += Gyroscope_ReadingChanged;
+                Accelerometer.ReadingChanged += Acc_ReadingChanged;
             }
             catch (Exception ex)
             {
@@ -186,7 +207,10 @@ namespace MobileIMU
             server?.Stop();
             if (Gyroscope.IsMonitoring)
                 Gyroscope.Stop();
+            if (Accelerometer.IsMonitoring)
+                Accelerometer.Stop();
             Gyroscope.ReadingChanged -= Gyroscope_ReadingChanged;
+            Accelerometer.ReadingChanged -= Acc_ReadingChanged;
             Toast.MakeText(this, "The service has been stopped.", ToastLength.Long).Show();
         }
 
